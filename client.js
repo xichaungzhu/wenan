@@ -36,6 +36,7 @@ window.__ModuleLoader__.load({
 			paramSave: "保存参数",
 			paramSaved: "参数已保存，整批跟着变",
 			paramSaveFailed: "参数保存失败",
+			moreHint: "词库与编辑器",
 			studio: "生成指令",
 			studioHint: "选体裁、填场景，拼一条能直接粘进对话的指令",
 			genre: "体裁",
@@ -102,6 +103,7 @@ window.__ModuleLoader__.load({
 			paramSave: "Save",
 			paramSaved: "Saved — the whole batch follows",
 			paramSaveFailed: "Save failed",
+			moreHint: "words & editor",
 			studio: "Build a brief",
 			studioHint: "Pick a format, add the scene, get a prompt you can paste",
 			genre: "Format",
@@ -220,6 +222,14 @@ window.__ModuleLoader__.load({
 
 .hvc_body{display:grid;grid-template-columns:minmax(320px,3.4fr) minmax(0,6.6fr);gap:16px;align-items:stretch}
 @media (max-width:1080px){.hvc_body{grid-template-columns:minmax(0,1fr)}}
+.hvc_right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.hvc_output{display:flex;flex-direction:column;min-height:340px;flex:1}
+.hvc_output .hvc_outBody{flex:1;min-height:0;overflow:auto}
+.hvc_emptyOut{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:260px;color:var(--hvc-muted);font-size:13px}
+.hvc_more{flex:none}
+.hvc_moreHead{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;list-style:none}
+.hvc_moreHead::-webkit-details-marker{display:none}
+.hvc_moreHint{margin-left:auto;font-weight:400;font-size:12px;color:var(--hvc-muted)}
 
 .hvc_card{box-sizing:border-box;min-width:0;border:1px solid var(--hvc-line);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-elevation-soft);overflow:hidden}
 .hvc_cardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--hvc-hair)}
@@ -883,40 +893,42 @@ window.__ModuleLoader__.load({
 					"div",
 					{ className: "hvc_gen" },
 					h("button", { type: "button", className: "hvc_btn hvc_btnPrimary", onClick: build }, h(IconSparkle, { size: 14 }), prompt === "" ? t("generate") : t("regenerate")),
-					h("button", { type: "button", className: "hvc_btn hvc_btnGhost", disabled: typeof onNewSession !== "function", onClick: onNewSession }, t("newSession")),
 					h("span", { className: "hvc_genHint" }, t("studioHint"))
+				)
+			);
+
+			const outputCard = h(
+				"section",
+				{ className: "hvc_card hvc_output", ref: outRef },
+				h(
+					"div",
+					{ className: "hvc_cardHead" },
+					h("span", { className: "hvc_cardTitle" }, t("promptTitle")),
+					prompt === ""
+						? null
+						: h(
+								"div",
+								{ style: { display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" } },
+								h("button", { type: "button", className: "hvc_btn hvc_btnGhost hvc_btnSm", onClick: () => copy(prompt) }, h(IconCopy, { size: 13 }), t("copy")),
+								h(
+									"button",
+									{
+										type: "button",
+										className: "hvc_btn hvc_btnPrimary hvc_btnSm",
+										disabled: typeof onNewSession !== "function",
+										onClick: () => {
+											copy(prompt);
+											onNewSession?.();
+										}
+									},
+									h(IconSparkle, { size: 13 }),
+									t("copyAndChat")
+								)
+						  )
 				),
 				prompt === ""
-					? h("div", { className: "hvc_slot" }, h(IconSparkle, { size: 14 }), t("promptEmpty"))
-					: h(
-							"div",
-							{ className: "hvc_out", ref: outRef },
-							h(
-								"div",
-								{ className: "hvc_outHead" },
-								h("span", { className: "hvc_outTitle" }, t("promptTitle")),
-								h(
-									"div",
-									{ style: { display: "flex", alignItems: "center", gap: 8 } },
-									h("button", { type: "button", className: "hvc_btn hvc_btnGhost hvc_btnSm", onClick: () => copy(prompt) }, h(IconCopy, { size: 13 }), t("copy")),
-									h(
-										"button",
-										{
-											type: "button",
-											className: "hvc_btn hvc_btnPrimary hvc_btnSm",
-											disabled: typeof onNewSession !== "function",
-											onClick: () => {
-												copy(prompt);
-												onNewSession?.();
-											}
-										},
-										h(IconSparkle, { size: 13 }),
-										t("copyAndChat")
-									)
-								)
-							),
-							h("pre", { className: "hvc_outBody" }, prompt)
-					  )
+					? h("div", { className: "hvc_emptyOut" }, h(IconSparkle, { size: 16 }), h("span", null, t("promptEmpty")))
+					: h("pre", { className: "hvc_outBody" }, prompt)
 			);
 
 			const skillTab = h(
@@ -1043,8 +1055,8 @@ window.__ModuleLoader__.load({
 			);
 
 			const workspace = h(
-				"section",
-				{ className: "hvc_card hvc_work" },
+				"div",
+				{ className: "hvc_work" },
 				h(
 					"div",
 					{ className: "hvc_workHead" },
@@ -1131,7 +1143,34 @@ window.__ModuleLoader__.load({
 								h("button", { type: "button", className: "hvc_btn hvc_btnSm", style: { marginTop: 10 }, onClick: () => load(false) }, h(IconRefresh, { size: 13 }), t("retry"))
 							)
 					  )
-					: h(React.Fragment, null, paramsCard, h("div", { className: "hvc_body" }, studio, workspace));
+					: h(
+							React.Fragment,
+							null,
+							paramsCard,
+							h(
+								"div",
+								{ className: "hvc_body" },
+								studio,
+								h(
+									"div",
+									{ className: "hvc_right" },
+									outputCard,
+									h(
+										"details",
+										{ className: "hvc_card hvc_more" },
+										h(
+											"summary",
+											{ className: "hvc_moreHead" },
+											h(IconFile, { size: 14 }),
+											h("span", null, t("references")),
+											h("span", { className: "hvc_badge" }, (data?.references ?? []).length),
+											h("span", { className: "hvc_moreHint" }, t("moreHint"))
+										),
+										workspace
+									)
+								)
+							)
+					  );
 
 			return h("div", { className: "hvc_root" }, h("style", null, css), h("div", { className: "hvc_page" }, header, body, h(Toast, { toast })));
 		}

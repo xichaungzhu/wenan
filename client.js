@@ -550,6 +550,7 @@ window.__ModuleLoader__.load({
 			const [query, setQuery] = useState("");
 			const [params, setParams] = useState(null);
 			const [savingParams, setSavingParams] = useState(false);
+			const outRef = useRef(null);
 			const [form, setForm] = useState({
 				genre: GENRES[0],
 				tone: TONES[1],
@@ -694,10 +695,13 @@ window.__ModuleLoader__.load({
 				const push = (label, value) => {
 					if (value && value !== "不限") lines.push(`${label}：${value}`);
 				};
+				const product = params?.product?.trim() ?? "";
+				const mechanism = params?.mechanism?.trim() ?? "";
+				const topic = form.topic.trim() || [product, mechanism].filter(Boolean).join("，");
 				push("体裁", form.genre);
 				push("基调", form.tone);
 				push("说话人", form.voice);
-				push("主题 / 产品", form.topic.trim());
+				push("主题 / 产品", topic);
 				push("场景", form.scene.trim());
 				push("对谁说", form.audience.trim());
 				push("时长", form.duration);
@@ -706,7 +710,8 @@ window.__ModuleLoader__.load({
 					return;
 				}
 				setPrompt(lines.join("\n"));
-			}, [form, notify, t]);
+				requestAnimationFrame(() => outRef.current?.scrollIntoView?.({ behavior: "smooth", block: "nearest" }));
+			}, [form, notify, t, params]);
 
 			// Latest-closure refs: the window shortcut listener mounts once.
 			const saveRef = useRef(save);
@@ -760,7 +765,7 @@ window.__ModuleLoader__.load({
 						"button",
 						{
 							type: "button",
-							className: "hvc_btn hvc_btnPrimary hvc_btnSm",
+							className: "hvc_btn hvc_btnGhost hvc_btnSm",
 							onClick: onNewSession,
 							disabled: typeof onNewSession !== "function",
 							title: t("newSession")
@@ -846,7 +851,7 @@ window.__ModuleLoader__.load({
 							className: "hvc_input",
 							value: form.topic,
 							"aria-label": t("topic"),
-							placeholder: t("topicPlaceholder"),
+							placeholder: params?.product ? `${params.product}${params.mechanism ? "，" + params.mechanism : ""}` : t("topicPlaceholder"),
 							onChange: (event) => setField("topic", event.target.value)
 						})
 					),
@@ -885,7 +890,7 @@ window.__ModuleLoader__.load({
 					? h("div", { className: "hvc_slot" }, h(IconSparkle, { size: 14 }), t("promptEmpty"))
 					: h(
 							"div",
-							{ className: "hvc_out" },
+							{ className: "hvc_out", ref: outRef },
 							h(
 								"div",
 								{ className: "hvc_outHead" },

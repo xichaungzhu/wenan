@@ -543,7 +543,7 @@ window.__ModuleLoader__.load({
 			const [saving, setSaving] = useState(false);
 			const [toggling, setToggling] = useState(false);
 			const [refreshing, setRefreshing] = useState(false);
-			const [tab, setTab] = useState("skill");
+			const [tab, setTab] = useState("refs");
 			const [prompt, setPrompt] = useState("");
 			const [toast, setToast] = useState(null);
 			const [openRef, setOpenRef] = useState("");
@@ -1068,22 +1068,6 @@ window.__ModuleLoader__.load({
 							{
 								type: "button",
 								role: "tab",
-								id: "hvc-tab-skill",
-								"data-tab": "skill",
-								"aria-controls": "hvc-panel-skill",
-								"aria-selected": tab === "skill",
-								tabIndex: tab === "skill" ? 0 : -1,
-								className: cx("hvc_tab", tab === "skill" && "hvc_tabOn"),
-								onClick: () => setTab("skill")
-							},
-							t("editor"),
-							dirty ? h("span", { className: "hvc_dirtyDot" }) : null
-						),
-						h(
-							"button",
-							{
-								type: "button",
-								role: "tab",
 								id: "hvc-tab-refs",
 								"data-tab": "refs",
 								"aria-controls": "hvc-panel-refs",
@@ -1094,6 +1078,22 @@ window.__ModuleLoader__.load({
 							},
 							t("references"),
 							h("span", { className: "hvc_badge" }, (data?.references ?? []).length)
+						),
+						h(
+							"button",
+							{
+								type: "button",
+								role: "tab",
+								id: "hvc-tab-skill",
+								"data-tab": "skill",
+								"aria-controls": "hvc-panel-skill",
+								"aria-selected": tab === "skill",
+								tabIndex: tab === "skill" ? 0 : -1,
+								className: cx("hvc_tab", tab === "skill" && "hvc_tabOn"),
+								onClick: () => setTab("skill")
+							},
+							t("editor"),
+							dirty ? h("span", { className: "hvc_dirtyDot" }) : null
 						)
 					),
 					tab === "refs"

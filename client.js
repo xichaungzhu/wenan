@@ -184,7 +184,8 @@ window.__ModuleLoader__.load({
 .hvc_ver{margin-left:8px;font-size:10.5px;font-weight:500;color:var(--hvc-muted);border:1px solid var(--hvc-hair);border-radius:999px;padding:1px 6px;vertical-align:3px;letter-spacing:.2px}
 .hvc_sub{margin-top:2px;font-size:12px;line-height:1.5;color:var(--hvc-mute)}
 .hvc_actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.hvc_params{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;padding:0 14px 12px;border-bottom:1px solid var(--hvc-hair);margin-bottom:12px}
+.hvc_params{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:end;box-sizing:border-box;border:1px solid var(--hvc-line);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-elevation-soft);padding:12px 16px}
+.hvc_params .hvc_field{margin:0}
 @media (max-width:720px){.hvc_params{grid-template-columns:minmax(0,1fr)}}
 
 .hvc_power{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 6px 0 10px;border-radius:999px;border:1px solid var(--hvc-line);background:var(--hvc-fill)}
@@ -217,7 +218,7 @@ window.__ModuleLoader__.load({
 .hvc_iconBtnSm{width:26px;height:26px;border-radius:6px}
 .hvc_spin{animation:hvc_spin .9s linear infinite}
 
-.hvc_body{display:grid;grid-template-columns:minmax(320px,3.4fr) minmax(0,6.6fr);gap:16px;align-items:start}
+.hvc_body{display:grid;grid-template-columns:minmax(320px,3.4fr) minmax(0,6.6fr);gap:16px;align-items:stretch}
 @media (max-width:1080px){.hvc_body{grid-template-columns:minmax(0,1fr)}}
 
 .hvc_card{box-sizing:border-box;min-width:0;border:1px solid var(--hvc-line);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-elevation-soft);overflow:hidden}
@@ -225,7 +226,7 @@ window.__ModuleLoader__.load({
 .hvc_cardTitle{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--hvc-mute)}
 .hvc_cardMeta{font-size:11.5px;color:var(--hvc-faint);white-space:nowrap;font-variant-numeric:tabular-nums}
 
-.hvc_studio{display:flex;flex-direction:column}
+.hvc_studio{display:flex;flex-direction:column;height:100%}
 .hvc_form{display:flex;flex-direction:column;gap:12px;padding:14px}
 .hvc_field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .hvc_label{font-size:12px;font-weight:500;color:var(--hvc-mute)}
@@ -252,7 +253,7 @@ window.__ModuleLoader__.load({
 .hvc_segItem:focus-visible{outline:2px solid var(--hvc-accent);outline-offset:1px}
 .hvc_segOn{background:var(--hvc-accent-soft);color:var(--hvc-accent);font-weight:500}
 
-.hvc_gen{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--hvc-hair)}
+.hvc_gen{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--hvc-hair);position:sticky;bottom:0;background:var(--dsw-alias-bg-layer-1);margin-top:auto}
 .hvc_genHint{font-size:11.5px;line-height:1.5;color:var(--hvc-faint)}
 
 .hvc_out{margin:0 14px 14px;border:1px solid var(--hvc-hair);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-markdown-code-block);overflow:hidden}
@@ -748,7 +749,7 @@ window.__ModuleLoader__.load({
 					h(
 						"div",
 						{ style: { minWidth: 0 } },
-						h("h1", { className: "hvc_title" }, t("title"), h("span", { className: "hvc_ver" }, "v0.3.1")),
+						h("h1", { className: "hvc_title" }, t("title"), h("span", { className: "hvc_ver" }, "v0.6.1")),
 						h("div", { className: "hvc_sub" }, t("subtitle"))
 					)
 				),
@@ -827,11 +828,10 @@ window.__ModuleLoader__.load({
 				"section",
 				{ className: "hvc_card hvc_studio", "aria-label": t("studio") },
 				h("div", { className: "hvc_cardHead" }, h("span", { className: "hvc_cardTitle" }, t("studio")), h("span", { className: "hvc_cardMeta" }, form.genre)),
-				paramsCard,
 				h(
 					"div",
 					{ className: "hvc_form" },
-					h(Fields, { label: t("genre") }, h(Chips, { label: t("genre"), options: GENRES, value: form.genre, onChange: (value) => setField("genre", value) })),
+					h(Fields, { label: t("genre") }, h(Select, { label: t("genre"), options: GENRES, value: form.genre, onChange: (value) => setField("genre", value) })),
 					h(Fields, { label: t("tone") }, h(Segmented, { label: t("tone"), options: TONES, value: form.tone, onChange: (value) => setField("tone", value) })),
 					h(
 						"div",
@@ -1126,7 +1126,7 @@ window.__ModuleLoader__.load({
 								h("button", { type: "button", className: "hvc_btn hvc_btnSm", style: { marginTop: 10 }, onClick: () => load(false) }, h(IconRefresh, { size: 13 }), t("retry"))
 							)
 					  )
-					: h("div", { className: "hvc_body" }, studio, workspace);
+					: h(React.Fragment, null, paramsCard, h("div", { className: "hvc_body" }, studio, workspace));
 
 			return h("div", { className: "hvc_root" }, h("style", null, css), h("div", { className: "hvc_page" }, header, body, h(Toast, { toast })));
 		}

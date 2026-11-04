@@ -10,6 +10,7 @@ window.__ModuleLoader__.load({
 		const API = "/human-voice-copy/api";
 		const SAVE = "/human-voice-copy/save";
 		const TOGGLE = "/human-voice-copy/toggle";
+		const PARAMS = "/human-voice-copy/params";
 
 		const inject = ["slots", "locale", "uiWorkspace"];
 
@@ -29,6 +30,12 @@ window.__ModuleLoader__.load({
 			toggleFailed: "切换失败",
 			newSession: "新建会话",
 			copyAndChat: "复制并开新会话",
+			paramTitle: "参数卡",
+			paramProduct: "产品名",
+			paramMechanism: "机制",
+			paramSave: "保存参数",
+			paramSaved: "参数已保存，整批跟着变",
+			paramSaveFailed: "参数保存失败",
 			studio: "生成指令",
 			studioHint: "选体裁、填场景，拼一条能直接粘进对话的指令",
 			genre: "体裁",
@@ -89,6 +96,12 @@ window.__ModuleLoader__.load({
 			toggleFailed: "Toggle failed",
 			newSession: "New chat",
 			copyAndChat: "Copy + new chat",
+			paramTitle: "Parameters",
+			paramProduct: "Product",
+			paramMechanism: "Offer",
+			paramSave: "Save",
+			paramSaved: "Saved — the whole batch follows",
+			paramSaveFailed: "Save failed",
 			studio: "Build a brief",
 			studioHint: "Pick a format, add the scene, get a prompt you can paste",
 			genre: "Format",
@@ -171,6 +184,8 @@ window.__ModuleLoader__.load({
 .hvc_ver{margin-left:8px;font-size:10.5px;font-weight:500;color:var(--hvc-muted);border:1px solid var(--hvc-hair);border-radius:999px;padding:1px 6px;vertical-align:3px;letter-spacing:.2px}
 .hvc_sub{margin-top:2px;font-size:12px;line-height:1.5;color:var(--hvc-mute)}
 .hvc_actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hvc_params{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;padding:0 14px 12px;border-bottom:1px solid var(--hvc-hair);margin-bottom:12px}
+@media (max-width:720px){.hvc_params{grid-template-columns:minmax(0,1fr)}}
 
 .hvc_power{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 6px 0 10px;border-radius:999px;border:1px solid var(--hvc-line);background:var(--hvc-fill)}
 .hvc_dot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 3px var(--dsw-alias-state-success-tertiary)}
@@ -532,6 +547,8 @@ window.__ModuleLoader__.load({
 			const [toast, setToast] = useState(null);
 			const [openRef, setOpenRef] = useState("");
 			const [query, setQuery] = useState("");
+			const [params, setParams] = useState(null);
+			const [savingParams, setSavingParams] = useState(false);
 			const [form, setForm] = useState({
 				genre: GENRES[0],
 				tone: TONES[1],
@@ -548,6 +565,29 @@ window.__ModuleLoader__.load({
 				if (toastTimer.current !== undefined) clearTimeout(toastTimer.current);
 				toastTimer.current = setTimeout(() => setToast(null), kind === "error" ? 3200 : 1800);
 			}, []);
+
+			const saveParams = useCallback(async () => {
+				setSavingParams(true);
+				try {
+					const response = await fetch(PARAMS, {
+						method: "POST",
+						credentials: "same-origin",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify({
+							product: params?.product ?? "",
+							mechanism: params?.mechanism ?? ""
+						})
+					});
+					const body = await response.json();
+					if (!body?.ok) throw new Error(body?.error || t("paramSaveFailed"));
+					setParams(body);
+					notify("ok", t("paramSaved"));
+				} catch (cause) {
+					notify("error", `${t("paramSaveFailed")}: ${String(cause?.message ?? cause)}`);
+				} finally {
+					setSavingParams(false);
+				}
+			}, [params, notify, t]);
 
 			useEffect(
 				() => () => {
@@ -566,6 +606,7 @@ window.__ModuleLoader__.load({
 						if (!body?.ok) throw new Error(body?.error || t("loadFailed"));
 						setData(body);
 						setDraft(body.skill?.content ?? "");
+						setParams(body.params ?? null);
 						setError("");
 						setPhase("ready");
 						if (quiet) notify("ok", t("refreshed"));
@@ -750,10 +791,43 @@ window.__ModuleLoader__.load({
 				)
 			);
 
+			const paramsCard = h(
+				"div",
+				{ className: "hvc_params", "aria-label": t("paramTitle") },
+				h(
+					Fields,
+					{ label: t("paramProduct") },
+					h("input", {
+						className: "hvc_input",
+						value: params?.product ?? "",
+						placeholder: "诺特兰德益生菌",
+						"aria-label": t("paramProduct"),
+						onChange: (event) => setParams({ ...(params ?? {}), product: event.target.value })
+					})
+				),
+				h(
+					Fields,
+					{ label: t("paramMechanism") },
+					h("input", {
+						className: "hvc_input",
+						value: params?.mechanism ?? "",
+						placeholder: "90多拍一发四",
+						"aria-label": t("paramMechanism"),
+						onChange: (event) => setParams({ ...(params ?? {}), mechanism: event.target.value })
+					})
+				),
+				h(
+					"button",
+					{ type: "button", className: "hvc_btn hvc_btnGhost hvc_btnSm", disabled: savingParams, onClick: saveParams },
+					savingParams ? t("saving") : t("paramSave")
+				)
+			);
+
 			const studio = h(
 				"section",
 				{ className: "hvc_card hvc_studio", "aria-label": t("studio") },
 				h("div", { className: "hvc_cardHead" }, h("span", { className: "hvc_cardTitle" }, t("studio")), h("span", { className: "hvc_cardMeta" }, form.genre)),
+				paramsCard,
 				h(
 					"div",
 					{ className: "hvc_form" },

@@ -17,6 +17,31 @@ const ASSETS_DIR = fileURLToPath(new URL("./assets/", import.meta.url));
 const SKILL_PATH = join(ASSETS_DIR, "SKILL.md");
 const REFERENCES_DIR = join(ASSETS_DIR, "references");
 const STATE_PATH = join(ASSETS_DIR, ".state.json");
+const PARAMS_PATH = join(ASSETS_DIR, "params.json");
+const DEFAULT_PARAMS = { product: "", mechanism: "", spec: "竖屏9:16 · 15秒", maxChars: 66 };
+
+async function readParams() {
+	try {
+		const parsed = JSON.parse(await readFile(PARAMS_PATH, "utf8"));
+		return { ...DEFAULT_PARAMS, ...parsed };
+	} catch {
+		return { ...DEFAULT_PARAMS };
+	}
+}
+
+async function writeParams(patch) {
+	const current = await readParams();
+	const next = { ...current };
+	for (const key of ["product", "mechanism", "spec"]) {
+		if (typeof patch?.[key] === "string") next[key] = patch[key].trim();
+	}
+	if (Number.isFinite(patch?.maxChars)) next.maxChars = Math.trunc(patch.maxChars);
+	next.updatedAt = new Date().toISOString();
+	const tmp = `${PARAMS_PATH}.tmp`;
+	await writeFile(tmp, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+	await rename(tmp, PARAMS_PATH);
+	return next;
+}
 const PROVIDER_NAME = "human-voice-copy";
 /** Precedence rank of a custom skill root; lower wins over user/agents roots. */
 const RANK = 300;
@@ -175,6 +200,7 @@ async function snapshot() {
 		ok: true,
 		provider: PROVIDER_NAME,
 		enabled: state.enabled,
+		params: await readParams(),
 		skill: {
 			...(skill ?? { id: "SKILL.md", bytes: 0, updatedAt: null }),
 			name: fields.name ?? PROVIDER_NAME,
@@ -266,6 +292,30 @@ function registerRoutes(scope) {
 					const body = await readBody(request);
 					const next = { enabled: body.enabled !== false };
 					await writeState(next);
+					invalidateCatalog();
+					sendJson(response, 200, { ok: true, ...next });
+				} catch (error) {
+					sendJson(response, 500, { ok: false, error: String(error?.message ?? error) });
+				}
+			}
+		});
+
+		route({
+			kind: "exact",
+			path: "/human-voice-copy/params",
+			handler: async (request, response) => {
+				try {
+					if (request.method === "GET") {
+						sendJson(response, 200, { ok: true, ...(await readParams()) });
+						return;
+					}
+					if (request.method !== "POST") {
+						response.writeHead(405, { allow: "GET, POST" });
+						response.end();
+						return;
+					}
+					const body = await readBody(request);
+					const next = await writeParams(body);
 					invalidateCatalog();
 					sendJson(response, 200, { ok: true, ...next });
 				} catch (error) {

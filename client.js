@@ -37,6 +37,8 @@ window.__ModuleLoader__.load({
 			paramSaved: "参数已保存，整批跟着变",
 			paramSaveFailed: "参数保存失败",
 			moreHint: "词库与编辑器",
+			person: "人物",
+			personPlaceholder: "李姐 58 退休教师，闺女买的",
 			studio: "生成指令",
 			studioHint: "选体裁、填场景，拼一条能直接粘进对话的指令",
 			genre: "体裁",
@@ -104,6 +106,8 @@ window.__ModuleLoader__.load({
 			paramSaved: "Saved — the whole batch follows",
 			paramSaveFailed: "Save failed",
 			moreHint: "words & editor",
+			person: "Who",
+			personPlaceholder: "Li, 58, retired teacher, daughter bought it",
 			studio: "Build a brief",
 			studioHint: "Pick a format, add the scene, get a prompt you can paste",
 			genre: "Format",
@@ -150,7 +154,6 @@ window.__ModuleLoader__.load({
 
 		const GENRES = ["口播稿", "字幕短句版", "朋友圈", "小红书", "公众号", "产品详情页", "私信 / 客服", "广告语 / 海报", "短信 / 推送", "招聘 JD", "自我介绍"];
 		const TONES = ["A 喊话体", "B 聊天体", "C 说明体"];
-		const VOICES = ["小店主", "宝妈", "退休教师", "程序员", "销售", "手艺人", "95 后", "老板", "医生", "房东", "健身教练", "老乡"];
 		const LENGTHS = ["15s", "30s", "45s", "60s", "90s", "不限"];
 
 		/** One stylesheet, one prefix, theme tokens only: no literal palette. */
@@ -564,7 +567,7 @@ window.__ModuleLoader__.load({
 			const [form, setForm] = useState({
 				genre: GENRES[0],
 				tone: TONES[1],
-				voice: VOICES[1],
+				person: "",
 				topic: "",
 				scene: "",
 				audience: "",
@@ -710,7 +713,7 @@ window.__ModuleLoader__.load({
 				const topic = form.topic.trim() || [product, mechanism].filter(Boolean).join("，");
 				push("体裁", form.genre);
 				push("基调", form.tone);
-				push("说话人", form.voice);
+				push("人物", form.person.trim());
 				push("主题 / 产品", topic);
 				push("场景", form.scene.trim());
 				push("对谁说", form.audience.trim());
@@ -851,7 +854,17 @@ window.__ModuleLoader__.load({
 					h(
 						"div",
 						{ className: "hvc_pair" },
-						h(Fields, { label: t("voice") }, h(Select, { label: t("voice"), options: VOICES, value: form.voice, onChange: (value) => setField("voice", value) })),
+						h(
+							Fields,
+							{ label: t("person") },
+							h("input", {
+								className: "hvc_input",
+								value: form.person,
+								"aria-label": t("person"),
+								placeholder: t("personPlaceholder"),
+								onChange: (event) => setField("person", event.target.value)
+							})
+						),
 						h(Fields, { label: t("duration") }, h(Select, { label: t("duration"), options: LENGTHS, value: form.duration, onChange: (value) => setField("duration", value) }))
 					),
 					h(
